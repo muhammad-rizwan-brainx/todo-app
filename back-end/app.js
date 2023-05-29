@@ -1,10 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 const userRoutes = require('./api/routes/userRoutes');
 const todoRoutes = require('./api/routes/todoRoutes');
-
-const db = mongoose.connect('mongodb+srv://rizwan:rizwan@todo.nss4qbi.mongodb.net/?retryWrites=true&w=majority')
+const dotenv = require("dotenv")
+dotenv.config()
+const mongoUri = process.env.MONGO_URI;
+const db = mongoose.connect(mongoUri)
 if (db) {
     console.log('success');
 } else {
@@ -12,9 +13,7 @@ if (db) {
 }
 
 const app = express();
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json())
+app.use(express.json())
 app.use('/user', userRoutes);
 app.use('/todos', todoRoutes);
 app.use((req, res, next) => {

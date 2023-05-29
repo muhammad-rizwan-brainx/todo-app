@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Todo = require("../models/todoModel");
-
+const dotenv = require("dotenv")
+dotenv.config()
+const root = process.env.ROOT;
 exports.getAllTodo = (re, res, next) => {
     Todo.find().select('title description').exec()
         .then(docs => {
@@ -13,27 +15,28 @@ exports.getAllTodo = (re, res, next) => {
                         _id: doc._id,
                         request: {
                             type: 'GET',
-                            url: 'http://localhost:8000/todos/' + doc._id
+                            url: root + '/todos/' + doc._id
                         }
                     }
                 })
             }
             res.status(200).json(response);
         }).catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
         });
-    });
 }
 
 exports.addTodo = (req, res, next) => {
     console.log(req.file);
-    const detailsTodo = new Todo({
-        _id: new mongoose.Types.ObjectId(),
-        title: req.body.title,
-        description: req.body.description,
-    });
+    const detailsTodo = new
+        Todo({
+            _id: new mongoose.Types.ObjectId(),
+            title: req.body.title,
+            description: req.body.description,
+        });
     console.log(detailsTodo)
     detailsTodo.save().then(result => {
         console.log(result);
@@ -45,7 +48,7 @@ exports.addTodo = (req, res, next) => {
                 id: result._id,
                 request: {
                     type: 'GET',
-                    url: 'http://localhost:8000/todos/' + result._id
+                    url: root + '/todos/' + result._id
                 }
             }
         });
@@ -54,7 +57,7 @@ exports.addTodo = (req, res, next) => {
 }
 
 
-exports.getTodoWithID =  (req, res, next) => {
+exports.getTodoWithID = (req, res, next) => {
     const id = req.params.todoID;
     Todo.findById(id).select('title description').exec().then(doc => {
         console.log(doc);
@@ -69,38 +72,38 @@ exports.getTodoWithID =  (req, res, next) => {
 exports.updateTodo = (req, res, next) => {
     const id = req.params.todoID;
     const payload = req.body;
-    Todo.updateOne({ id: id }, { $set: payload })
-    .exec()
+    Todo.updateOne({ id }, { $set: payload })
+        .exec()
         .then(result => {
             console.log(result);
             res.status(200).json(result);
         }).catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
         });
-    });
 }
 
 
 exports.deleteTodo = (req, res, next) => {
-    const id = req.params.todoID;
-    Todo.deleteOne({ _id: id })
-      .exec()
-      .then(result => {
-        res.status(200).json({
-          message: "Todo deleted",
-          request: {
-            type: "POST",
-            url: "http://localhost:8000/todos",
-            body: { title: "String", description: "Number" }
-          }
+    const _id = req.params.todoID;
+    Todo.deleteOne({ _id })
+        .exec()
+        .then(result => {
+            res.status(200).json({
+                message: "Todo deleted",
+                request: {
+                    type: "POST",
+                    url: root + "/todos",
+                    body: { title: "String", description: "Number" }
+                }
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
         });
-      })
-      .catch(err => {
-        console.log(err);
-        res.status(500).json({
-          error: err
-        });
-      });
-  };
+};

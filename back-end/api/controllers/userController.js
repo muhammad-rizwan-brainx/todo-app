@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 const User = require("../models/userModel");
+const dotenv = require("dotenv")
+dotenv.config()
+const salt = process.env.SALT;
 
 exports.signup = (req, res, next) => {
     User.find({ email: req.body.email }).exec().then(user => {
@@ -19,13 +21,13 @@ exports.signup = (req, res, next) => {
                     });
                 }
                 else {
-                    console.log(hash)
-                    const user = new User({
-                        _id: new mongoose.Types.ObjectId(),
-                        userName : req.body.userName,
-                        email: req.body.email,
-                        password: hash
-                    });
+                    const user = new
+                        User({
+                            _id: new mongoose.Types.ObjectId(),
+                            userName: req.body.userName,
+                            email: req.body.email,
+                            password: hash
+                        });
                     user.save().then(result => {
                         res.status(201).json({
                             Message: "User Created"
@@ -61,7 +63,7 @@ exports.login = (req, res, next) => {
                 const token = jwt.sign({
                     email: user[0].email,
                     id: user[0]._id
-                }, "rizwan",
+                }, salt ,
                     {
                         expiresIn: "1h"
                     });
@@ -84,8 +86,8 @@ exports.login = (req, res, next) => {
 
 
 exports.deleteUser = (req, res, next) => {
-    const _id = req.params.userID;
-    User.deleteOne({ id: _id }).exec().then(result => {
+    const id = req.params.userID;
+    User.deleteOne({ id }).exec().then(result => {
         res.status(200).json({
             result: result
         });
