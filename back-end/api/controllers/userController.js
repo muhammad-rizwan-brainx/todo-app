@@ -9,38 +9,34 @@ const salt = process.env.SALT;
 exports.signup = (req, res, next) => {
     User.find({ email: req.body.email }).exec().then(user => {
         if (user.length >= 1) {
-            res.status(422).json({
+            return res.status(422).json({
                 "Message": "Mail Exists Already"
             });
         }
-        else {
-            bcrypt.hash(req.body.password, 10, (err, hash) => {
-                if (err) {
-                    res.status(500).json({
-                        Error: err
-                    });
-                }
-                else {
-                    const user = new
-                        User({
-                            _id: new mongoose.Types.ObjectId(),
-                            userName: req.body.userName,
-                            email: req.body.email,
-                            password: hash
-                        });
-                    user.save().then(result => {
-                        res.status(201).json({
-                            Message: "User Created"
-                        });
-                    }).catch(err => {
-                        res.status(500).json({
-                            Error: err
-                        });
-                    });
-
-                }
+        bcrypt.hash(req.body.password, 10, (err, hash) => {
+            if (err) {
+                return res.status(500).json({
+                    Error: err
+                });
+            }
+            const user = new
+                User({
+                    _id: new mongoose.Types.ObjectId(),
+                    userName: req.body.userName,
+                    email: req.body.email,
+                    password: hash
+                });
+            user.save().then(result => {
+                res.status(201).json({
+                    Message: "User Created"
+                });
+            }).catch(err => {
+                res.status(500).json({
+                    Error: err
+                });
             });
-        }
+
+        });
     });
 
 }
@@ -49,13 +45,13 @@ exports.signup = (req, res, next) => {
 exports.login = (req, res, next) => {
     User.find({ email: req.body.email }).exec().then(user => {
         if (user.length < 1) {
-            res.status(401).json({
-                Message: "Auth Fail"
+            return res.status(401).json({
+                Message: "User Doesn't Exist"
             })
         }
         bcrypt.compare(req.body.password, user[0].password, (err, respons) => {
             if (err) {
-                res.status(401).json({
+                return res.status(401).json({
                     Message: "Auth Fail"
                 })
             }
