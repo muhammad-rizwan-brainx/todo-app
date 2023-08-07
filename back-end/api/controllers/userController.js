@@ -1,0 +1,96 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
+const dotenv = require("dotenv")
+dotenv.config()
+const salt = process.env.SALT;
+
+exports.signup = (req, res, next) => {
+    User.find({ email: req.body.email }).exec().then(user => {
+        if (user.length >= 1) {
+            return res.status(422).json({
+                "Message": "Mail Exists Already"
+            });
+        }
+        bcrypt.hash(req.body.password, 10, (err, hash) => {
+            if (err) {
+                return res.status(500).json({
+                    Error: err
+                });
+            }
+            const user = new
+                User({
+                    _id: new mongoose.Types.ObjectId(),
+                    userName: req.body.userName,
+                    email: req.body.email,
+                    password: hash
+                });
+            user.save().then(result => {
+                res.status(201).json({
+                    Message: "User Created"
+                });
+            }).catch(err => {
+                res.status(500).json({
+                    Error: err
+                });
+            });
+
+        });
+    });
+
+}
+
+
+exports.login = (req, res, next) => {
+    User.find({ email: req.body.email }).exec().then(user => {
+        if (user.length < 1) {
+            return res.status(401).json({
+                Message: "User Doesn't Exist"
+            })
+        }
+        bcrypt.compare(req.body.password, user[0].password, (err, respons) => {
+            if (err) {
+                return res.status(401).json({
+                    Message: "Auth Fail"
+                })
+            }
+            if (respons) {
+                const token = jwt.sign({
+                    email: user[0].email,
+                    id: user[0]._id
+                }, salt ,
+                    {
+                        expiresIn: "1h"
+                    });
+                return res.status(200).json({
+                    message: "successfull",
+                    token: token
+                });
+            }
+            res.status(401).json({
+                Message: "Auth Fail"
+            });
+        });
+    }).catch(err => {
+        res.status(500).json({
+            Error: err
+        });
+    });
+
+}
+
+
+exports.deleteUser = (req, res, next) => {
+    const id = req.params.userID;
+    User.deleteOne({ id }).exec().then(result => {
+        res.status(200).json({
+            result: result
+        });
+    }).catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err
+        });
+    });
+}
